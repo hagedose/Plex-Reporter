@@ -2,7 +2,7 @@
 # Plex Reporter Script - stu@lifeofstu.com
 # Licensed under the Simplified BSD License, 2011
 # Copyright 2012, Stuart Hopkins
-# Version 1.0k
+# Version 1.0l
 
 use strict;
 use warnings;
@@ -64,7 +64,7 @@ if ( $CURUSER ) {
 # Newline string, keeps things tidy
 my $NL = "\n";
 my $SRCHDATE;
-my $VERSION = "1.0k";
+my $VERSION = "1.0l";
 
 #########################
 ## VARIABLES - DYNAMIC ##
@@ -1415,7 +1415,7 @@ sub plex_parseLog() {
              $log_line !~ /.+GET\ \/:\/progress\?X-Plex-Token=[a-zA-Z0-9]+&key=[0-9]+.*&state=playing/ &&
              $log_line !~ /.+GET\ \/video\/:\/transcode.+ratingKey=[0-9]+/ &&
              $log_line !~ /.+GET\ \/library\/metadata\/[0-9]+\?X-Plex-Token/ &&
-             $log_line !~ /.+GET\ \/video\/:\/transcode\/segmented\/start.m3u8.+library\%2fparts\%2f[0-9]+/ &&
+             $log_line !~ /.+GET\ \/video\/:\/transcode\/segmented\/start.m[34]u8.+library\%2[fF]parts\%2[fF][0-9]+/ &&
              $log_line !~ /.+HTTP\ requesting\ to:.+&ratingKey=.+state=playing/
         ) {
             # Not interested, wrong type of log line
@@ -1515,17 +1515,7 @@ sub plex_parseLog() {
                 $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+GET\ \/library\/metadata\/([0-9]+).*\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
                 &plex_debug(2,"Type 2 Line Match: $tmp_line");
             }
-#        } elsif ( $tmp_line =~ /X-Plex-Client-Platform/ ) {
-#            # Plex 0.9.6 - new URL format
-#            &plex_debug(2,"Type 3 Line Match: $tmp_line");
-#            if ( $tmp_line =~ /\[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+\]/ ) {
-#                # Port number is present
-#	        $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+\?key=([0-9]+)\&.*\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):[0-9]+\].*$/$1|$2/;
-#            } else {
-#                # No port number
-#                $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+\?key=([0-9]+)\&.*\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
-#            }
-        } elsif ( $tmp_line =~ /transcode\/segmented\/start\.m3u.+ratingKey/ ||
+        } elsif ( $tmp_line =~ /transcode\/segmented\/start\.m[34]u.+ratingKey/ ||
                   $tmp_line =~ /transcode\/segmented\/session\// ) {
             # Mobile device, transcoding session, use the ratingKey
             &plex_debug(2,"Type 5 Line Match: $tmp_line");
@@ -1534,28 +1524,41 @@ sub plex_parseLog() {
             } else {
                 $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+\&ratingKey=([0-9]+)\&.+\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
             }
-        } elsif ( $tmp_line =~ /.+GET\ \/video\/:\/transcode\/segmented\/start.m3u8.+library\%2fparts\%2f[0-9]+/ ) {
+        } elsif ( $tmp_line =~ /.+GET\ \/video\/:\/transcode\/segmented\/start.m[34]u8.+library\%2[fF]parts\%2[fF][0-9]+/ ) {
             # Plex 0.9.6.1 - yet another new URL format
             &plex_debug(2, "Type 6 Line Match: $tmp_line");
             if ( $tmp_line =~ /\[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+\]/ ) {
-                 $tmp_line =~ s/^.+%2flibrary%2fparts%2f([0-9]+)%2f.+\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):[0-9]+\].*$/$1|$2/;
+                 $tmp_line =~ s/^.+%2[fF]library%2[fF]parts%2[fF]([0-9]+)%2[fF].+\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):[0-9]+\].*$/$1|$2/;
             } else {
-                 $tmp_line =~ s/^.+%2flibrary%2fparts%2f([0-9]+)%2f.+\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
+                 $tmp_line =~ s/^.+%2[fF]library%2[fF]parts%2[fF]([0-9]+)%2[fF].+\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
             }
-            # Type 6 lines pass the part, not the media ID, so we have to check the part cache
+            # Split the line
             my ($tmp_part, $tmp_ip) = split(/\|/, $tmp_line);
             if ( $tmp_part =~ /[^0-9]/ ) {
                 &plex_die("Invalid characters found after line split: $tmp_part");
             }
             if ( ! defined($tmp_ip) ) {
                 &plex_die("Failed to split the IP address from the line: $tmp_line");
-            }
-            if ( defined($plex_parts->{$tmp_part}) ) {
-                # We have a match, create a new line so we can drop through to the rest of the code
-                $tmp_line = $plex_parts->{$tmp_part}."|".$tmp_ip;
+            }            
+            # Some Type 6 lines pass the part and not the media ID, while some pass the ID in the metadata
+            if ( $log_line =~ /metadata2%[fF][0-9]+/ ) {
+                # Media ID is in the URL
+                my $tmp_logline = $log_line;
+                $tmp_logline =~ s/.*metadata2%[fF]([0-9]+).*/$1/;
+                if ( ! defined($tmp_logline) ) {
+                    &plex_die("Failed to parse type 6 metadata");
+                }
+                $tmp_line = $tmp_logline."|".$tmp_ip;
             } else {
-                # No entry, and no way to lookup, set the media ID to zero
-                $tmp_line = "0|".$tmp_ip;
+                # Part not the media ID, so we have to check the part cache
+                if ( defined($plex_parts->{$tmp_part}) ) {
+                    # We have a match, create a new line so we can drop through to the rest of the code
+                    $tmp_line = $plex_parts->{$tmp_part}."|".$tmp_ip;
+                } else {
+                    # No entry, and no way to lookup, skip this entry
+                    #$tmp_line = "0|".$tmp_ip;
+                    next;
+                }
             }
         } elsif ( $tmp_line =~ /.+GET\ \/:\/progress\?X-Plex-Token=[a-zA-Z0-9]+&key=[0-9]+.*&state=playing\ \[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+\].*/ ) {
             # Plex 0.9.6.9 - another URL format
@@ -1579,6 +1582,10 @@ sub plex_parseLog() {
         if ( ! defined($tmp_key) || ! defined($tmp_ip) ) {
             &plex_regexError($log_line, $tmp_line);
         } elsif ( $tmp_key eq "" || $tmp_ip eq "" ) {
+            &plex_regexError($log_line, $tmp_line);
+        }
+        # Check if the item id is zero (broken line parse)
+        if ( $tmp_key eq "0" ) {
             &plex_regexError($log_line, $tmp_line);
         }
         undef($tmp_line);

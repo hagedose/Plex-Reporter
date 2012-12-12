@@ -94,3 +94,11 @@ Plex Reporter Script - Changelog
 1.0i    - Added initial support for DLNA reporting
 
 1.0j    - Fixed broken date calc introduced in 1.0h release
+
+1.0k    - Internal release
+
+1.0l    - Added support for newer plex versions (url case change)
+        - Added support for newer plex version with type 6 lines including media id
+        - Added support for m4u8 log lines
+        - Fixed entries showing up with item ID 0
+
