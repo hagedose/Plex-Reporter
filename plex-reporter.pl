@@ -2,7 +2,7 @@
 # Plex Reporter Script - stu@lifeofstu.com
 # Licensed under the Simplified BSD License, 2011
 # Copyright 2012, Stuart Hopkins
-# Version 1.0l
+# Version 1.0m
 
 use strict;
 use warnings;
@@ -64,7 +64,7 @@ if ( $CURUSER ) {
 # Newline string, keeps things tidy
 my $NL = "\n";
 my $SRCHDATE;
-my $VERSION = "1.0l";
+my $VERSION = "1.0m";
 
 #########################
 ## VARIABLES - DYNAMIC ##
@@ -1408,15 +1408,15 @@ sub plex_parseLog() {
         my $t_id = 'identifier=com.plexapp.plugins.library';
         my $t_lm = 'library/metadata';
         my $t_pt = 'X-Plex-Token';
-        if ( $log_line !~ /.+progress\?key=[0-9]+.+state=playing/ &&
-             $log_line !~ /.+progress\?key=[0-9]+.+$t_pt=/ &&
-             $log_line !~ /.+GET\ \/$t_lm\/[0-9]+\?$t_pt=.*\[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\]/ &&
-             $log_line !~ /.+GET\ \/:\/progress\?key=[0-9]+&$t_id&time=[0-9]+/ &&
-             $log_line !~ /.+GET\ \/:\/progress\?X-Plex-Token=[a-zA-Z0-9]+&key=[0-9]+.*&state=playing/ &&
-             $log_line !~ /.+GET\ \/video\/:\/transcode.+ratingKey=[0-9]+/ &&
-             $log_line !~ /.+GET\ \/library\/metadata\/[0-9]+\?X-Plex-Token/ &&
-             $log_line !~ /.+GET\ \/video\/:\/transcode\/segmented\/start.m[34]u8.+library\%2[fF]parts\%2[fF][0-9]+/ &&
-             $log_line !~ /.+HTTP\ requesting\ to:.+&ratingKey=.+state=playing/
+        if ( $log_line !~ /.+DEBUG.+progress\?key=[0-9]+.+state=playing/ &&
+             $log_line !~ /.+DEBUG.+progress\?key=[0-9]+.+$t_pt=/ &&
+             $log_line !~ /.+DEBUG.+GET\ \/$t_lm\/[0-9]+\?$t_pt=.*\[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\]/ &&
+             $log_line !~ /.+DEBUG.+GET\ \/:\/progress\?key=[0-9]+&$t_id&time=[0-9]+/ &&
+             $log_line !~ /.+DEBUG.+GET\ \/:\/progress\?X-Plex-Token=[a-zA-Z0-9]+&key=[0-9]+.*&state=playing/ &&
+             $log_line !~ /.+DEBUG.+GET\ \/video\/:\/transcode.+ratingKey=[0-9]+/ &&
+             $log_line !~ /.+DEBUG.+GET\ \/library\/metadata\/[0-9]+\?X-Plex-Token/ &&
+             $log_line !~ /.+DEBUG.+GET\ \/video\/:\/transcode\/segmented\/start.m[34]u8.+library\%2[fF]parts\%2[fF][0-9]+/ &&
+             $log_line !~ /.+DEBUG.+HTTP\ requesting\ to:.+&ratingKey=.+state=playing/
         ) {
             # Not interested, wrong type of log line
             undef($log_line);

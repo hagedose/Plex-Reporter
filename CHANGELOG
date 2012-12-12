@@ -102,3 +102,4 @@ Plex Reporter Script - Changelog
         - Added support for m4u8 log lines
         - Fixed entries showing up with item ID 0
 
+1.0m    - Fixed matching the wrong type of lines (VERBOSE instead of DEBUG)
