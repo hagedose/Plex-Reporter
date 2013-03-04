@@ -1509,28 +1509,28 @@ sub plex_parseLog() {
         my $tmp_line = $log_line;
         if ( $tmp_line =~ /GET\ \/library\/metadata\// ) {
             if ( $tmp_line =~ /progress/ ) {
-                $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+GET\ \/:\/progress\?key=([0-9]+).*\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
+                $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+GET\ \/:\/progress\?key=([0-9]+).*\[(?:::ffff:)?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
                 &plex_debug(2,"Type 1 Line Match: $tmp_line");
             } else {
-                $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+GET\ \/library\/metadata\/([0-9]+).*\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
+                $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+GET\ \/library\/metadata\/([0-9]+).*\[(?:::ffff:)?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
                 &plex_debug(2,"Type 2 Line Match: $tmp_line");
             }
         } elsif ( $tmp_line =~ /transcode\/segmented\/start\.m[34]u.+ratingKey/ ||
                   $tmp_line =~ /transcode\/segmented\/session\// ) {
             # Mobile device, transcoding session, use the ratingKey
             &plex_debug(2,"Type 5 Line Match: $tmp_line");
-            if ( $tmp_line =~ /\[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+\]/ ) {
-                $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+\&ratingKey=([0-9]+)\&.+\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):[0-9]+\].*$/$1|$2/;
+            if ( $tmp_line =~ /\[(::ffff:)?[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+\]/ ) {
+                $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+\&ratingKey=([0-9]+)\&.+\[(?:::ffff:)?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):[0-9]+\].*$/$1|$2/;
             } else {
-                $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+\&ratingKey=([0-9]+)\&.+\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
+                $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+\&ratingKey=([0-9]+)\&.+\[(?:::ffff:)?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
             }
         } elsif ( $tmp_line =~ /.+GET\ \/video\/:\/transcode\/segmented\/start.m[34]u8.+library\%2[fF]parts\%2[fF][0-9]+/ ) {
             # Plex 0.9.6.1 - yet another new URL format
             &plex_debug(2, "Type 6 Line Match: $tmp_line");
-            if ( $tmp_line =~ /\[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+\]/ ) {
-                 $tmp_line =~ s/^.+%2[fF]library%2[fF]parts%2[fF]([0-9]+)%2[fF].+\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):[0-9]+\].*$/$1|$2/;
+            if ( $tmp_line =~ /\[(?:::ffff:)?[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+\]/ ) {
+                 $tmp_line =~ s/^.+%2[fF]library%2[fF]parts%2[fF]([0-9]+)%2[fF].+\[(?:::ffff:)?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):[0-9]+\].*$/$1|$2/;
             } else {
-                 $tmp_line =~ s/^.+%2[fF]library%2[fF]parts%2[fF]([0-9]+)%2[fF].+\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
+                 $tmp_line =~ s/^.+%2[fF]library%2[fF]parts%2[fF]([0-9]+)%2[fF].+\[(?:::ffff:)?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
             }
             # Split the line
             my ($tmp_part, $tmp_ip) = split(/\|/, $tmp_line);
@@ -1560,21 +1560,21 @@ sub plex_parseLog() {
                     next;
                 }
             }
-        } elsif ( $tmp_line =~ /.+GET\ \/:\/progress\?X-Plex-Token=[a-zA-Z0-9]+&key=[0-9]+.*&state=playing\ \[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+\].*/ ) {
+        } elsif ( $tmp_line =~ /.+GET\ \/:\/progress\?X-Plex-Token=[a-zA-Z0-9]+&key=[0-9]+.*&state=playing\ \[(?:::ffff:)?[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+\].*/ ) {
             # Plex 0.9.6.9 - another URL format
             &plex_debug(2,"Type 7 Line Match: $tmp_line");
-            $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ .*&key=([0-9]+)\&.*\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):[0-9]+\].*$/$1|$2/;
+            $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ .*&key=([0-9]+)\&.*\[(?:::ffff:)?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):[0-9]+\].*$/$1|$2/;
         } elsif ( $tmp_line =~ /.+HTTP\ requesting\ to:.+ratingKey=.+state=playing/ ) {
             # Plex DLNA Match
             $tmp_line =~ s/^.+&ratingKey=([0-9]+).+$/$1|DLNA/;
         } else {
-            $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+[\?\&]key=([0-9]+).+\[([0-9\.]+)\].+$/$1|$2/;
+            $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+[\?\&]key=([0-9]+).+\[(?:::ffff:)?([0-9\.]+)\].+$/$1|$2/;
             # Plex 0.9.6 - new URL format
             &plex_debug(2,"Type 4 Line Match: $tmp_line");
-            if ( $tmp_line =~ /\[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+\]/ ) {
-                $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+GET\ \/:\/progress\?key=([0-9]+).*\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):[0-9]+\].*$/$1|$2/;
+            if ( $tmp_line =~ /\[(::ffff:)?[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+\]/ ) {
+                $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+GET\ \/:\/progress\?key=([0-9]+).*\[(?:::ffff:)?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):[0-9]+\].*$/$1|$2/;
             } else {
-                $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+GET\ \/:\/progress\?key=([0-9]+).*\[([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
+                $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+GET\ \/:\/progress\?key=([0-9]+).*\[(?:::ffff:)?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
             }
         }
         # Split the new line to pull out the date/video id/ip
