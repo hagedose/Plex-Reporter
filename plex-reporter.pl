@@ -2,7 +2,7 @@
 # Plex Reporter Script - stu@lifeofstu.com
 # Licensed under the Simplified BSD License, 2011
 # Copyright 2012, Stuart Hopkins
-# Version 1.0m
+# Version 1.0n
 
 use strict;
 use warnings;
@@ -64,7 +64,7 @@ if ( $CURUSER ) {
 # Newline string, keeps things tidy
 my $NL = "\n";
 my $SRCHDATE;
-my $VERSION = "1.0m";
+my $VERSION = "1.0n";
 
 #########################
 ## VARIABLES - DYNAMIC ##
@@ -318,7 +318,16 @@ foreach my $plex_date (sort keys %{$plex_dates}) {
         # Loop through each of the plex items for this client and date
         foreach my $plex_item (sort keys %{$plex_dates->{$plex_date}->{$plex_client}}) {
             my $tmp_item = &plex_itemLookup($plex_item);
-            # Sanity check, has teh item type been set?
+        # check for user name
+            my $tmp_user;
+            if ($plex_dates->{$plex_date}->{$plex_client}->{$plex_item} != 1) {
+                my @tmp_user = keys %{$plex_dates->{$plex_date}->{$plex_client}->{$plex_item}};
+                $tmp_user = $tmp_user[0];
+                plex_debug(3, "Found user $tmp_user");
+                print "  - Username for this client: ".$tmp_user."$NL";
+                $email->{clienttext} .= "  - Username for this client: ".$tmp_user."$NL";
+            }
+            # Sanity check, has the item type been set?
             if ( ! defined($tmp_item->{type}) ) {
                 print "ERROR: A cached item type was not set\n";
                 print Dumper $tmp_item;
@@ -1404,6 +1413,8 @@ sub plex_parseLog() {
         my $log_line = $_;
         # Remove any newline character
         chomp($log_line);
+    # Translate hexchar '%xx' to char
+    $log_line =~ s/%([0-9A-F]{2})/chr(hex($1))/egi;
         # Some vars to make the code somewhat neater
         my $t_id = 'identifier=com.plexapp.plugins.library';
         my $t_lm = 'library/metadata';
@@ -1416,7 +1427,8 @@ sub plex_parseLog() {
              $log_line !~ /.+DEBUG.+GET\ \/video\/:\/transcode.+ratingKey=[0-9]+/ &&
              $log_line !~ /.+DEBUG.+GET\ \/library\/metadata\/[0-9]+\?X-Plex-Token/ &&
              $log_line !~ /.+DEBUG.+GET\ \/video\/:\/transcode\/segmented\/start.m[34]u8.+library\%2[fF]parts\%2[fF][0-9]+/ &&
-             $log_line !~ /.+DEBUG.+HTTP\ requesting\ to:.+&ratingKey=.+state=playing/
+             $log_line !~ /.+DEBUG.+HTTP\ requesting\ to:.+&ratingKey=.+state=playing/ &&
+             $log_line !~ /.+DEBUG.+GET\ \/video\/:\/transcode\/universal\/start/
         ) {
             # Not interested, wrong type of log line
             undef($log_line);
@@ -1567,6 +1579,9 @@ sub plex_parseLog() {
         } elsif ( $tmp_line =~ /.+HTTP\ requesting\ to:.+ratingKey=.+state=playing/ ) {
             # Plex DLNA Match
             $tmp_line =~ s/^.+&ratingKey=([0-9]+).+$/$1|DLNA/;
+        } elsif ( $tmp_line =~ /transcode\/universal\/start/ ) {
+            # Transcoding match
+            $tmp_line =~ s/^.*metadata\/(\d+).*Username=(\w+) \[(\d+\.\d+\.\d+\.\d+):\d+\].*$/$1|$3|$2/;
         } else {
             $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+[\?\&]key=([0-9]+).+\[(?:::ffff:)?([0-9\.]+)\].+$/$1|$2/;
             # Plex 0.9.6 - new URL format
@@ -1578,7 +1593,7 @@ sub plex_parseLog() {
             }
         }
         # Split the new line to pull out the date/video id/ip
-        my ($tmp_key, $tmp_ip) = split(/\|/, $tmp_line);
+        my ($tmp_key, $tmp_ip, $tmp_user) = split(/\|/, $tmp_line);
         if ( ! defined($tmp_key) || ! defined($tmp_ip) ) {
             &plex_regexError($log_line, $tmp_line);
         } elsif ( $tmp_key eq "" || $tmp_ip eq "" ) {
@@ -1606,7 +1621,11 @@ sub plex_parseLog() {
         ( length($tmp_key) && length($tmp_ip) ) ||
             &plex_die("Failed to retrieve required variables from line: $log_line");
         # Store this entry in the plex_dates hash
-        $plex_dates->{$tmp_date}->{$tmp_ip}->{$tmp_key} = 1;
+        if (defined $tmp_user) { # we have a username
+            $plex_dates->{$tmp_date}->{$tmp_ip}->{$tmp_key}->{$tmp_user} = 1;
+        } else {
+            $plex_dates->{$tmp_date}->{$tmp_ip}->{$tmp_key} = 1;
+        }
         undef($tmp_date);
         undef($tmp_key);
         undef($tmp_ip);

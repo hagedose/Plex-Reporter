@@ -103,3 +103,5 @@ Plex Reporter Script - Changelog
         - Fixed entries showing up with item ID 0
 
 1.0m    - Fixed matching the wrong type of lines (VERBOSE instead of DEBUG)
+
+1.0n    - Added patch from tyrion to fix latest version of PMS
