@@ -95,7 +95,6 @@ $plex_opts->{htmllenlimit}  = 22;
 $plex_opts->{htmlnoimg}     = "/images/nothumb.png";
 $plex_opts->{xmlout}        = 0;
 my $plex_parts;
-my %tokens;
 
 ###########################
 ## MAIN CODE STARTS HERE ##
@@ -321,13 +320,13 @@ foreach my $plex_date (sort keys %{$plex_dates}) {
             my $tmp_item = &plex_itemLookup($plex_item);
         # check for user name
             my $tmp_user;
-			if ($plex_dates->{$plex_date}->{$plex_client}->{$plex_item} != 1) {
-				my @tmp_user = keys %{$plex_dates->{$plex_date}->{$plex_client}->{$plex_item}};
-        		$tmp_user = $tmp_user[0];
-        		&plex_debug(3, "Found user $tmp_user");
-        		print "  - Username for this client: ".$tmp_user."$NL";
-        		$email->{clienttext} .= "  - Username for this client: ".$tmp_user."$NL";
-        	}
+            if ($plex_dates->{$plex_date}->{$plex_client}->{$plex_item} != 1) {
+                my @tmp_user = keys %{$plex_dates->{$plex_date}->{$plex_client}->{$plex_item}};
+                $tmp_user = $tmp_user[0];
+                plex_debug(3, "Found user $tmp_user");
+                print "  - Username for this client: ".$tmp_user."$NL";
+                $email->{clienttext} .= "  - Username for this client: ".$tmp_user."$NL";
+            }
             # Sanity check, has the item type been set?
             if ( ! defined($tmp_item->{type}) ) {
                 print "ERROR: A cached item type was not set\n";
@@ -1414,17 +1413,12 @@ sub plex_parseLog() {
         my $log_line = $_;
         # Remove any newline character
         chomp($log_line);
-    	# Translate hexchar '%xx' to char
-    	$log_line =~ s/%([0-9A-F]{2})/chr(hex($1))/egi;
+    # Translate hexchar '%xx' to char
+    $log_line =~ s/%([0-9A-F]{2})/chr(hex($1))/egi;
         # Some vars to make the code somewhat neater
         my $t_id = 'identifier=com.plexapp.plugins.library';
         my $t_lm = 'library/metadata';
         my $t_pt = 'X-Plex-Token';
-        # Collect tokens to identify myPlex users
-        if ( $log_line =~ /MyPlex: Added (\w+) as token for .* for (\w+)$/ ) {
-        	$tokens{$1} = $2;
-        	next;
-        }
         if ( $log_line !~ /.+DEBUG.+progress\?key=[0-9]+.+state=playing/ &&
              $log_line !~ /.+DEBUG.+progress\?key=[0-9]+.+$t_pt=/ &&
              $log_line !~ /.+DEBUG.+GET\ \/$t_lm\/[0-9]+\?$t_pt=.*\[[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\]/ &&
@@ -1586,8 +1580,8 @@ sub plex_parseLog() {
             # Plex DLNA Match
             $tmp_line =~ s/^.+&ratingKey=([0-9]+).+$/$1|DLNA/;
         } elsif ( $tmp_line =~ /transcode\/universal\/start/ ) {
-        	# Transcoding match
-        	$tmp_line =~ s/^.*metadata\/(\d+).*Username=(\w+) \[(\d+\.\d+\.\d+\.\d+):\d+\].*$/$1|$3|$2/;
+            # Transcoding match
+            $tmp_line =~ s/^.*metadata\/(\d+).*Username=(\w+) \[(\d+\.\d+\.\d+\.\d+):\d+\].*$/$1|$3|$2/;
         } else {
             $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+[\?\&]key=([0-9]+).+\[(?:::ffff:)?([0-9\.]+)\].+$/$1|$2/;
             # Plex 0.9.6 - new URL format
@@ -1628,9 +1622,9 @@ sub plex_parseLog() {
             &plex_die("Failed to retrieve required variables from line: $log_line");
         # Store this entry in the plex_dates hash
         if (defined $tmp_user) { # we have a username
-        	$plex_dates->{$tmp_date}->{$tmp_ip}->{$tmp_key}->{$tmp_user} = 1;
+            $plex_dates->{$tmp_date}->{$tmp_ip}->{$tmp_key}->{$tmp_user} = 1;
         } else {
-        	$plex_dates->{$tmp_date}->{$tmp_ip}->{$tmp_key} = 1;
+            $plex_dates->{$tmp_date}->{$tmp_ip}->{$tmp_key} = 1;
         }
         undef($tmp_date);
         undef($tmp_key);
