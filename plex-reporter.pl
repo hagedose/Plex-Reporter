@@ -64,6 +64,7 @@ if ( $CURUSER ) {
 # Newline string, keeps things tidy
 my $NL = "\n";
 my $SRCHDATE;
+my $MAX_ROTATE = 5; # maximum number of log files that are kept during rotation
 my $VERSION = "1.0n";
 
 #########################
@@ -152,6 +153,16 @@ foreach my $plex_lf ( @PLEX_LOGFILES ) {
     } else {
         # Logfile does not exist
         &plex_debug(2,"Logfile does not exist: '$plex_lf'");
+    }
+    # starting with Plex Media Server 0.9.7.23 the logs are rotated
+    my $loop = 1;
+    while ( $loop <= $MAX_ROTATE) {
+    	if ( -f "$plex_lf.$loop" ) {
+        	print "- Reading logfile: $plex_lf.$loop$NL";
+        	# Open the logfile and parse it
+        	&plex_parseLog($plex_lf.'.'.$loop);
+    	}
+    	$loop++;
     }
     undef($plex_lf);
 }
