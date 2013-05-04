@@ -1588,14 +1588,14 @@ sub plex_parseLog() {
             $tmp_line =~ s/^.+&ratingKey=([0-9]+).+$/$1|DLNA/;
         } elsif ( $tmp_line =~ /transcode\/universal\/start.*Username/ ) {
         	# Transcoding match with user name
-        	$tmp_line =~ s/^.*metadata\/(\d+).*Username=(\w+) \[(\d+\.\d+\.\d+\.\d+):\d+\].*$/$1|$3|$2/;
+        	$tmp_line =~ s/^.*metadata\/(\d+).*Username=(\w+) \[(?:::ffff:)?(\d+\.\d+\.\d+\.\d+):\d+\].*$/$1|$3|$2/;
         } elsif ( $tmp_line =~ /transcode\/universal\/start/ ) {
         	# Transcoding match without user name
-        	$tmp_line =~ s/^.*metadata\/(\d+).* \[(\d+\.\d+\.\d+\.\d+):\d+\].*$/$1|$2/;	
+        	$tmp_line =~ s/^.*metadata\/(\d+).* \[(?:::ffff:)?(\d+\.\d+\.\d+\.\d+):\d+\].*$/$1|$2/;	
         } elsif ( $tmp_line =~ /.+DEBUG.+GET\ \/library\/parts\/\d+\/file\.avi\?X-Plex-Token/ ) {
             &plex_debug(2,"MyPlex Line Match: $tmp_line");
             # myPlex access – the file id is actually a parts id
-            $tmp_line =~ /.+DEBUG.+GET\ \/library\/parts\/(\d+)\/file\.avi\?X-Plex-Token=([a-zA-Z0-9]+) \[(\d+\.\d+\.\d+\.\d+):\d+\].*$/;
+            $tmp_line =~ /.+DEBUG.+GET\ \/library\/parts\/(\d+)\/file\.avi\?X-Plex-Token=([a-zA-Z0-9]+) \[(?:::ffff:)?(\d+\.\d+\.\d+\.\d+):\d+\].*$/;
             if ( defined $plex_parts->{$1} ) {
                 $tmp_line = "$plex_parts->{$1}|$3";
             } else {
