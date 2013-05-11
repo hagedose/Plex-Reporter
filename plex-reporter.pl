@@ -1,8 +1,8 @@
 #!/usr/bin/env perl
 # Plex Reporter Script - stu@lifeofstu.com
 # Licensed under the Simplified BSD License, 2011
-# Copyright 2012, Stuart Hopkins
-# Version 1.0n
+# Copyright 2013, Stuart Hopkins
+# Version 1.0o
 
 use strict;
 use warnings;
@@ -65,7 +65,7 @@ if ( $CURUSER ) {
 my $NL = "\n";
 my $SRCHDATE;
 my $MAX_ROTATE = 5; # maximum number of log files that are kept during rotation
-my $VERSION = "1.0n";
+my $VERSION = "1.0o";
 
 #########################
 ## VARIABLES - DYNAMIC ##
