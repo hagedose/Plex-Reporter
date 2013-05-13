@@ -331,6 +331,7 @@ foreach my $plex_date (sort keys %{$plex_dates}) {
         foreach my $plex_item (sort keys %{$plex_dates->{$plex_date}->{$plex_client}}) {
             my $tmp_item = &plex_itemLookup($plex_item);
         # check for user name
+        # right now this is a rather simplistic approach: each client, i.e. IP address, can only have one user name
         	my $tmp_user;
 			if ($plex_dates->{$plex_date}->{$plex_client}->{$plex_item} != 1) {
 				my @tmp_user = keys %{$plex_dates->{$plex_date}->{$plex_client}->{$plex_item}};
@@ -1419,6 +1420,7 @@ sub plex_parseLog() {
     # Open the passed logfile and parse usable lines
     &plex_debug(3,"Called plex_parseLog");
     my $tmp_lastdate;
+    my $token;
     open(PLEX_LOG, '<', $_[0]) ||
         &plex_die("Failed to open logfile for reading: ".$_[0]);
     while (<PLEX_LOG>) {
@@ -1549,11 +1551,19 @@ sub plex_parseLog() {
                   $tmp_line =~ /transcode\/segmented\/session\// ) {
             # Mobile device, transcoding session, use the ratingKey
             &plex_debug(2,"Type 5 Line Match: $tmp_line");
+            # Try to get the token
+            if ( $tmp_line =~ /$t_pt=(\w+)\&/ ) {
+            	$token = $1;
+            	&plex_debug(3,"Found a token: $token");
+            } else {
+	            $token = undef;
+        	}
             if ( $tmp_line =~ /\[(::ffff:)?[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+\]/ ) {
                 $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+\&ratingKey=([0-9]+)\&.+\[(?:::ffff:)?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):[0-9]+\].*$/$1|$2/;
             } else {
                 $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+\&ratingKey=([0-9]+)\&.+\[(?:::ffff:)?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\].*$/$1|$2/;
             }
+            $tmp_line .= "|$tokens{$token}" if (defined $token) and (exists $tokens{$token});
         } elsif ( $tmp_line =~ /.+GET\ \/video\/:\/transcode\/segmented\/start.m[34]u8.+library\%2[fF]parts\%2[fF][0-9]+/ ) {
             # Plex 0.9.6.1 - yet another new URL format
             &plex_debug(2, "Type 6 Line Match: $tmp_line");
