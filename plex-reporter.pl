@@ -1448,7 +1448,8 @@ sub plex_parseLog() {
              $log_line !~ /.+DEBUG.+GET\ \/video\/:\/transcode\/segmented\/start.m[34]u8.+library\%2[fF]parts\%2[fF][0-9]+/ &&
              $log_line !~ /.+DEBUG.+HTTP\ requesting\ to:.+&ratingKey=.+state=playing/ &&
              $log_line !~ /.+DEBUG.+GET\ \/video\/:\/transcode\/universal\/start/ &&
-             $log_line !~ /.+DEBUG.+GET\ \/library\/parts\/\d+\/file\.avi\?X-Plex-Token/
+             $log_line !~ /.+DEBUG.+GET\ \/library\/parts\/\d+\/file\.avi\?X-Plex-Token/ &&
+             $log_line !~ /.+DEBUG.+GET\ \/:\/timeline\?key=/
         ) {
             # Not interested, wrong type of log line
             undef($log_line);
@@ -1626,6 +1627,10 @@ sub plex_parseLog() {
                 next;
             }
             $tmp_line .= "|$tokens{$2}" if exists $tokens{$2};
+        } elsif ( $tmp_line =~ /.+DEBUG.+GET\ \/:\/timeline\?key=.*Username/ ) {
+            &plex_debug(3,"iOS player line match (?): $tmp_line");
+            $tmp_line =~s/^.*metadata\/(\d+).*Username=(\w+)\&?.* \[(?:::ffff:)?(\d+\.\d+\.\d+\.\d+):\d+\].*$/$1|$3|$2/;
+            &plex_debug(3, "iOS player match with user name: $1|$3|$2");
         } else {
             $tmp_line =~ s/^[a-zA-Z]+\ [0-9]+,\ [0-9]+.+[\?\&]key=([0-9]+).+\[(?:::ffff:)?([0-9\.]+)\].+$/$1|$2/;
             # Plex 0.9.6 - new URL format
