@@ -309,6 +309,7 @@ foreach my $plex_date (sort keys %{$plex_dates}) {
         my @tmp_cw_movie;
         my @tmp_cw_tv;
         my @tmp_cw_un;
+        my $check_for_username = 1;
         ## Source the name of the client
         my $tmp_clientname = &plex_clientLookup($plex_client);
         print "  - Examining activity for client: ".$tmp_clientname->{name}."$NL";
@@ -330,15 +331,18 @@ foreach my $plex_date (sort keys %{$plex_dates}) {
         # Loop through each of the plex items for this client and date
         foreach my $plex_item (sort keys %{$plex_dates->{$plex_date}->{$plex_client}}) {
             my $tmp_item = &plex_itemLookup($plex_item);
-        # check for user name
-        # right now this is a rather simplistic approach: each client, i.e. IP address, can only have one user name
-        	my $tmp_user;
-			if ($plex_dates->{$plex_date}->{$plex_client}->{$plex_item} != 1) {
-				my @tmp_user = keys %{$plex_dates->{$plex_date}->{$plex_client}->{$plex_item}};
-        		$tmp_user = $tmp_user[0];
-        		&plex_debug(3, "Found user $tmp_user");
-        		print "  - Username for this client: ".$tmp_user."$NL";
-        		$email->{clienttext} .= "  - Username for this client: ".$tmp_user."$NL";
+            if ($check_for_username) {
+                # check for user name
+                # right now this is a rather simplistic approach: each client, i.e. IP address, can only have one user name
+        	    my $tmp_user;
+			    if ($plex_dates->{$plex_date}->{$plex_client}->{$plex_item} != 1) {
+				    my @tmp_user = keys %{$plex_dates->{$plex_date}->{$plex_client}->{$plex_item}};
+        		    $tmp_user = $tmp_user[0];
+        		    &plex_debug(3, "Found user $tmp_user");
+        		    print "  - Username for this client: ".$tmp_user."$NL";
+        		    $email->{clienttext} .= "  - Username for this client: ".$tmp_user."$NL";
+        		    $check_for_username = 0;
+        	    }
         	}
             # Sanity check, has the item type been set?
             if ( ! defined($tmp_item->{type}) ) {
